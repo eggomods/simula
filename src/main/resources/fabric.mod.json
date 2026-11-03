@@ -1,38 +1,39 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
+	"id": "simula",
 	"version": "${version}",
-	"name": "Example Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Simula",
+	"description": "Choose your beginning (simula) to gain benefits and/or drawbacks.",
 	"authors": [
-		"Me!"
+		"eggohito"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/eggomods/simula",
+		"issues": "https://github.com/eggomods/simula"
 	},
-	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"license": "MIT",
+	"icon": "assets/simula/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"io.github.eggohito.simula.Simula"
 		],
 		"client": [
-			"com.example.client.ExampleModClient"
+			"io.github.eggohito.simula.SimulaClient"
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
+		"simula.mixins.json",
 		{
-			"config": "modid.client.mixins.json",
+			"config": "simula.client.mixins.json",
 			"environment": "client"
 		}
 	],
 	"depends": {
-		"fabricloader": ">=0.20.1",
-		"minecraft": "~26.3",
-		"java": ">=25",
-		"fabric-api": "*"
-	}
+		"fabricloader": ">=${loader}",
+		"minecraft": "${minecraft}",
+		"java": ">=${java}",
+		"fabric-api": ">=${fabric}"
+	},
+	"accessWidener": "simula.classtweaker"
 }

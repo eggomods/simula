@@ -1,9 +1,9 @@
 {
 	"required": true,
-	"package": "com.example.client.mixin",
-	"compatibilityLevel": "JAVA_25",
-	"client": [
-		"ExampleClientMixin"
+	"package": "io.github.eggohito.simula.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+
 	],
 	"injectors": {
 		"defaultRequire": 1
