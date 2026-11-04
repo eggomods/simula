@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -12,6 +12,40 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "CurseForge"
+				url = "https://cursemaven.com"
+			}
+		}
+		filter {
+			includeGroup "curse.maven"
+		}
+	}
+	maven {
+		name = "QuiltMC"
+		url = "https://maven.quiltmc.org/repository/release"
+	}
+	maven {
+		name = "Xander Maven"
+		url = "https://maven.isxander.dev/releases"
+	}
+	maven {
+		name = "Terraformers"
+		url = "https://maven.terraformersmc.com/"
+	}
 }
 
 loom {
@@ -51,22 +85,26 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}")
 
+	//	TODO: Replace with Modrinth's maven once Kaya is approved
+	include(modImplementation("curse.maven:kaya-1768701:${project.kaya_version}"))
+
 }
 
 processResources {
 
+	def version = project.version
+	var props = [
+		"version": version,
+		"loader": loader_version,
+		"minecraft": minecraft_version,
+		"fabric": fabric_api_version,
+		"java": java_version
+	]
+
+	inputs.property "version", version
+
 	filesMatching("fabric.mod.json") {
-
-		var props = [
-			"version": project.version,
-			"loader": loader_version,
-			"minecraft": minecraft_version,
-			"fabric": fabric_api_version,
-			"java": java_version
-		]
-
 		expand props
-
 	}
 
 }
@@ -87,8 +125,11 @@ java {
 
 jar {
 
+	def projectName = project.name
+	inputs.property "projectName", project.name
+
 	from("LICENSE") {
-		rename { "${it}_${project.name}" }
+		rename { "${it}_${projectName}"}
 	}
 
 }
