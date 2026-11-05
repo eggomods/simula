@@ -3,6 +3,7 @@ package io.github.eggohito.simula.origin;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.eggohito.kaya.context.Context;
 import io.github.eggohito.kaya.context.ContextValidatable;
 import io.github.eggohito.kaya.context.ContextValidator;
 import io.github.eggohito.kaya.provider.custom.number.IntProvider;
@@ -35,6 +36,10 @@ public sealed interface Impact extends ContextValidatable {
 
 	default Sprite sprite() {
 		return new Sprite(id().withPath(path -> "impact/" + path), this == Default.NONE);
+	}
+
+	default int level(Context context) {
+		return level().getInt(context.forChild(".level"));
 	}
 
 	private static Either<Definition, Default> wrap(Impact impact) {
