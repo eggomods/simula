@@ -6,7 +6,9 @@ import net.fabricmc.fabric.api.event.EventFactory;
 
 public interface SimulaDependencyManagers {
 
-	Event<DependencyManager> ORIGIN = create();
+	Event<DependencyManager> ORIGINS = create();
+
+	Event<DependencyManager> LAYERS = create();
 
 	//  FIXME: Make the 'create()' method from Kaya's DependencyManager class public
 	private static Event<DependencyManager> create() {

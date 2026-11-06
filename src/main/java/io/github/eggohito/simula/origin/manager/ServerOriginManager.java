@@ -56,7 +56,7 @@ import java.util.function.Supplier;
 public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLocation, OriginHolder> implements OriginManager, IdentifiableResourceReloadListener {
 
 	private static final Logger LOGGER = LogUtils.getLogger();
-	private static final Supplier<ImmutableSet<ResourceLocation>> DEPENDENCIES = Suppliers.memoize(() -> Util.make(ImmutableSet.builder(), SimulaDependencyManagers.ORIGIN.invoker()::add).build());
+	private static final Supplier<ImmutableSet<ResourceLocation>> DEPENDENCIES = Suppliers.memoize(() -> Util.make(ImmutableSet.builder(), SimulaDependencyManagers.ORIGINS.invoker()::add).build());
 
 	private final JsonFileToIdConverter contentLoader = JsonFileToIdConverter.registry(SimulaRegistryKeys.ORIGIN);
 	private final TagLoader<OriginHolder> tagLoader = new TagLoader<>((id, required) -> this.getAsResult(id).result(), Registries.tagsDirPath(SimulaRegistryKeys.ORIGIN));
@@ -68,7 +68,7 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 	public void init() {
 
 		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(ID, this::withOps);
-		SimulaDependencyManagers.ORIGIN.register(ID, dependencies -> dependencies.add(PowerManager.ID));
+		SimulaDependencyManagers.ORIGINS.register(ID, dependencies -> dependencies.add(PowerManager.ID));
 
 		ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.addPhaseOrdering(PowerManager.ID, ID);
 		ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ID, (player, joined) -> {
@@ -141,12 +141,9 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 			OriginPreparation.EVENT.invoker().prepare(id, jsonWithSource, contentLoader.directory(), ops);
 			ResourceLocationUtil.setCurrent(id);
 
-			MiscUtil.handleResult(
-				OriginHolder.CODEC.parse(ops, jsonWithSource.json()),
-				holder -> builder.put(id, holder),
-				warning -> LOGGER.warn("Found warning(s) while parsing {} from data pack [{}]: {}", id, jsonWithSource.source(), warning),
-				error -> LOGGER.error("Error trying to parse {} from data pack [{}] (skipping): {}", id, jsonWithSource.source(), error)
-			);
+			OriginHolder.CODEC.parse(ops, jsonWithSource.json())
+				.ifError(error -> LOGGER.error("Error trying to parse origin \"{}\" from data pack [{}] (skipping): {}", id, jsonWithSource.source(), error.message()))
+				.ifSuccess(holder -> builder.put(id, holder));
 
 			ResourceLocationUtil.setCurrent(null);
 

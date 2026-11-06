@@ -4,6 +4,7 @@ import io.github.eggohito.kaya.util.manager.ContentAndTagManager;
 import io.github.eggohito.kaya.util.manager.KayaManagers;
 import io.github.eggohito.simula.Simula;
 import io.github.eggohito.simula.origin.OriginHolder;
+import io.github.eggohito.simula.util.TagValidator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import org.jetbrains.annotations.ApiStatus;
@@ -37,6 +38,8 @@ public interface OriginManager extends ContentAndTagManager<ResourceLocation, Or
 		}
 
 	};
+
+	TagValidator<OriginHolder> TAG_VALIDATOR = new TagValidator<>(TAG_LOOKUP);
 
 	@ApiStatus.Internal
 	void init();

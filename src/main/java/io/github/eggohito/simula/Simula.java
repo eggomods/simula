@@ -1,5 +1,6 @@
 package io.github.eggohito.simula;
 
+import io.github.eggohito.simula.layer.manager.LayerManager;
 import io.github.eggohito.simula.network.SimulaServerboundPacketListener;
 import io.github.eggohito.simula.network.packet.SimulaPackets;
 import io.github.eggohito.simula.origin.manager.OriginManager;
@@ -35,6 +36,7 @@ public class Simula implements ModInitializer {
 		SimulaServerboundPacketListener.init();
 
 		OriginManager.getInstance().init();
+		LayerManager.getInstance().init();
 
 	}
 
