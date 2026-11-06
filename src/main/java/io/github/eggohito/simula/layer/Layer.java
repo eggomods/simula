@@ -131,7 +131,7 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 		@Override
 		public void validate(ContextValidator validator) {
 			origins().validate(validator.forChild(".origins"));
-			OriginManager.TAG_VALIDATOR.validateFile(randomBlacklist());
+			OriginManager.TAG_VALIDATOR.validateFile(randomBlacklist()).resultOrPartial(validator.forChild(".random_blacklist")::reportProblem);
 			defaultOrigin()
 				.map(id -> OriginManager.getInstance().getAsResult(id))
 				.ifPresent(result -> result.resultOrPartial(validator.forChild(".default_origin")::reportProblem));
