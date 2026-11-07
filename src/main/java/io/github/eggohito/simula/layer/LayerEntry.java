@@ -1,6 +1,7 @@
 package io.github.eggohito.simula.layer;
 
 import com.google.common.collect.ImmutableBiMap;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -17,13 +18,17 @@ import io.github.eggohito.simula.codec.SimulaCodecs;
 import io.github.eggohito.simula.codec.SimulaStreamCodecs;
 import io.github.eggohito.simula.origin.OriginHolder;
 import io.github.eggohito.simula.origin.manager.OriginManager;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import io.github.eggohito.simula.util.SuggestionProviderHelper;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.List;
+import java.util.Optional;
 
 //  TODO: possibly expose this interface for custom layer entry types?
 public sealed interface LayerEntry extends ContextValidatable {
@@ -35,6 +40,10 @@ public sealed interface LayerEntry extends ContextValidatable {
 	Type<?> getType();
 
 	List<OriginHolder> getOrigins(Context context);
+
+	List<OriginHolder> getOrigins();
+
+	void suggestIds(SuggestionsBuilder builder);
 
 	record Conditioned(Condition condition, TagLike<OriginHolder> entries) implements LayerEntry {
 
@@ -59,8 +68,18 @@ public sealed interface LayerEntry extends ContextValidatable {
 		@Override
 		public List<OriginHolder> getOrigins(Context context) {
 			return condition().test(context.forChild(".condition"))
-				? entries().elements()
+				? this.getOrigins()
 				: List.of();
+		}
+
+		@Override
+		public List<OriginHolder> getOrigins() {
+			return entries().elements();
+		}
+
+		@Override
+		public void suggestIds(SuggestionsBuilder builder) {
+			SuggestionProviderHelper.suggestResources(entries().elements(), builder, OriginHolder::id);
 		}
 
 		@Override
@@ -94,17 +113,36 @@ public sealed interface LayerEntry extends ContextValidatable {
 
 		@Override
 		public List<OriginHolder> getOrigins(Context context) {
+			return this.getOrigins();
+		}
 
-			List<OriginHolder> result = new ObjectArrayList<>();
-			entry().build(OriginManager.TAG_LOOKUP, result::add);
+		@Override
+		public List<OriginHolder> getOrigins() {
+			return this.getOrigin()
+				.map(List::of)
+				.orElse(List.of());
+		}
 
-			return result;
-
+		@Override
+		public void suggestIds(SuggestionsBuilder builder) {
+			this.getOrigin()
+				.map(OriginHolder::id)
+				.map(ResourceLocation::toString)
+				.ifPresent(id -> SharedSuggestionProvider.suggest(List.of(id), builder));
 		}
 
 		@Override
 		public void validate(ContextValidator validator) {
 			OriginManager.TAG_VALIDATOR.validateEntry(entry()).resultOrPartial(validator.forChild(".entry")::reportProblem);
+		}
+
+		private Optional<OriginHolder> getOrigin() {
+
+			Mutable<OriginHolder> result = new MutableObject<>();
+			entry().build(OriginManager.TAG_LOOKUP, result::setValue);
+
+			return Optional.ofNullable(result.getValue());
+
 		}
 
 	}

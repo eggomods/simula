@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 @ApiStatus.Internal
@@ -119,6 +120,10 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 
 	}
 
+	protected void postChange(BiConsumer<ResourceLocation, OriginHolder> listener) {
+		OriginHolder.specials().forEach(holder -> listener.accept(holder.id(), holder));
+	}
+
 	private ServerOriginManager withOps(@NotNull HolderLookup.Provider registries) {
 		this.ops = registries.createSerializationContext(JsonOps.INSTANCE);
 		return this;
@@ -148,6 +153,8 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 			ResourceLocationUtil.setCurrent(null);
 
 		});
+
+		this.postChange(builder::put);
 
 		this.contents = builder.build();
 		this.pendingTags = ImmutableMap.copyOf(pendingTags);
@@ -179,8 +186,6 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 			}
 
 		}
-
-		OriginHolder.specials().forEach(holder -> validated.put(holder.id(), holder));
 
 		this.contents = validated.build();
 		LOGGER.info("Finished validating {} origin(s). Origin manager contains {} origin(s)", prevSize, contents.size());

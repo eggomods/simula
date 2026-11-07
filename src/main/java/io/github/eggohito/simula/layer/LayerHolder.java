@@ -1,6 +1,8 @@
 package io.github.eggohito.simula.layer;
 
 import com.google.common.collect.Multimap;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.eggohito.kaya.context.Context;
@@ -15,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public record LayerHolder(ResourceLocation id, Layer value, Layer.Display display) implements Comparable<LayerHolder>, ContextValidatable {
 
@@ -54,10 +57,6 @@ public record LayerHolder(ResourceLocation id, Layer value, Layer.Display displa
 		return Objects.hashCode(this.id());
 	}
 
-	public List<OriginHolder> getOrigins(Context context) {
-		return this.value().getOrigins(context);
-	}
-
 	public List<OriginHolder> getRandomOrigins(Context context) {
 
 		Multimap<Context, OriginHolder> origins = this.value().getOriginsAsMap(context);
@@ -67,6 +66,24 @@ public record LayerHolder(ResourceLocation id, Layer value, Layer.Display displa
 		sorted.sort(OriginHolder::compareTo);
 
 		return sorted;
+
+	}
+
+	public List<OriginHolder> getOrigins(Context context) {
+		return this.value().getOrigins(context);
+	}
+
+	public List<OriginHolder> getOrigins() {
+		return this.value().getOrigins();
+	}
+
+	public CompletableFuture<Suggestions> suggestIds(SuggestionsBuilder builder) {
+
+		for (var entry : value().origins()) {
+			entry.suggestIds(builder);
+		}
+
+		return builder.buildFuture();
 
 	}
 

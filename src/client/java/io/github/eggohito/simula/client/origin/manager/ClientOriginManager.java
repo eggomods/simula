@@ -22,8 +22,12 @@ public final class ClientOriginManager extends ServerOriginManager {
 	}
 
 	private void receive(ClientboundUpdateOriginsPacket payload) {
+
+		this.postChange(payload.origins()::put);
+
 		this.contents = ImmutableMap.copyOf(payload.origins());
 		this.tags = ImmutableMap.copyOf(payload.tags());
+
 	}
 
 	private void clear() {

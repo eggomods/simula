@@ -1,14 +1,18 @@
 package io.github.eggohito.simula;
 
+import io.github.eggohito.simula.command.OriginCommand;
 import io.github.eggohito.simula.layer.manager.LayerManager;
 import io.github.eggohito.simula.network.SimulaServerboundPacketListener;
 import io.github.eggohito.simula.network.packet.SimulaPackets;
 import io.github.eggohito.simula.origin.manager.OriginManager;
 import io.github.eggohito.simula.registry.attachment.SimulaEntityAttachments;
+import io.github.eggohito.simula.registry.command.SimulaArgumentTypes;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
+import net.minecraft.commands.Commands;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +37,22 @@ public class Simula implements ModInitializer {
 
 		version = mod.getMetadata().getVersion();
 
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+
+			var rootNode = dispatcher.getRoot();
+			var baseNode = Commands.literal(MOD_NAMESPACE).build();
+
+			OriginCommand.register(rootNode);
+			OriginCommand.register(baseNode);
+
+			rootNode.addChild(baseNode);
+
+		});
+
 		SimulaPackets.registerAll();
 		SimulaServerboundPacketListener.init();
 
+		SimulaArgumentTypes.registerAll();
 		SimulaEntityAttachments.registerAll();
 
 		OriginManager.getInstance().init();

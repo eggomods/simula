@@ -47,7 +47,7 @@ public record OriginsAttachment(ImmutableMap<LayerHolder, OriginHolder> origins,
 
 		public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			ResourceLocation.CODEC.fieldOf("layer").forGetter(Entry::layer),
-			ResourceLocation.CODEC.fieldOf("origin").forGetter(Entry::layer)
+			ResourceLocation.CODEC.fieldOf("origin").forGetter(Entry::origin)
 		).apply(instance, Entry::new));
 
 		public static final StreamCodec<ByteBuf, Entry> STREAM_CODEC = StreamCodec.composite(

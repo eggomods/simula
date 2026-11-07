@@ -27,10 +27,13 @@ public record ClientboundUpdateOriginsPacket(Map<ResourceLocation, OriginHolder>
 
 	private void send(RegistryFriendlyByteBuf buf) {
 
-		buf.writeInt(origins().size());
+		Map<ResourceLocation, OriginHolder> filtered = new Object2ObjectLinkedOpenHashMap<>(origins());
+		filtered.values().removeIf(OriginHolder::special);
+
+		buf.writeInt(filtered.size());
 		buf.writeInt(tags().size());
 
-		for (var entry : origins().entrySet()) {
+		for (var entry : filtered.entrySet()) {
 
 			ResourceLocation id = entry.getKey();
 			ResourceLocation.STREAM_CODEC.encode(buf, id);

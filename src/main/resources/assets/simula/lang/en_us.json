@@ -1,0 +1,8 @@
+{
+	"commands.simula.origin.not_registered_to_layer": "Origin '%s' is not registered to layer '%s'",
+	"commands.simula.origin.set.fail.origin_not_allowed": "Using '%s' is not allowed in this context!",
+	"commands.simula.origin.set.fail.multiple": "%s entities already has their origin in layer '%s' set to '%s'",
+	"commands.simula.origin.set.fail.single": "Entity %s already has their origin in layer '%s' set to '%s'",
+	"commands.simula.origin.set.success.multiple": "Successfully set origins of %s entities in layer '%s' to '%s'",
+	"commands.simula.origin.set.success.single": "Successfully set origin of %s in layer '%s' to '%s'"
+}

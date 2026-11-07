@@ -85,6 +85,16 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 
 	}
 
+	public List<OriginHolder> getOrigins() {
+
+		List<OriginHolder> result = new ObjectArrayList<>();
+		this.origins().forEach(entry -> result.addAll(entry.getOrigins()));
+
+		result.sort(OriginHolder::compareTo);
+		return result;
+
+	}
+
 	public Template toTemplate() {
 		return new Template(
 			new LayerEntry.File(origins()),
