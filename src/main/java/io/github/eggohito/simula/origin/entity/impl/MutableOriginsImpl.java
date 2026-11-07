@@ -228,22 +228,22 @@ public final class MutableOriginsImpl extends AbstractOrigins implements Mutable
 
 	private static void onJoin(MutableOrigins mutable, ServerPlayer player) {
 
+		boolean allLayersHadOrigins = mutable.allLayersHaveOrigins();
 		mutable.checkLayers(true);
-		player.setAttached(SimulaEntityAttachments.SELECTING_ORIGIN, Unit.INSTANCE); // TODO: implement compatibility for fake players
 
-		if (mutable.allLayersHaveOrigins()) {
-			mutable.onChosen(false);
+		if (!allLayersHadOrigins && mutable.allLayersHaveOrigins()) {
+			mutable.onChosen(mutable.hadOriginsBefore());
 		}
 
+		// TODO: check for fake players before setting the attachment and sending the clientbound packet for opening
+		//       the choosing screen
 		else {
-			//  TODO: send clientbound packet for opening the choosing screen here
+			player.setAttached(SimulaEntityAttachments.SELECTING_ORIGIN, Unit.INSTANCE);
 		}
 
 	}
 
 	private static void onReload(MutableOrigins mutable, ServerPlayer player) {
-
-		Context context = ContextHelper.forEntity(player);
 
 		for (var oldLayer : mutable.getLayers()) {
 
@@ -261,9 +261,7 @@ public final class MutableOriginsImpl extends AbstractOrigins implements Mutable
 			OriginHolder oldOrigin = mutable.getOrigin(oldLayer);
 			OriginHolder newOrigin = OriginManager.getInstance().getAsResult(oldLayer.id()).result().orElse(null);
 
-			List<OriginHolder> origins = newLayer.getOrigins(context);
-
-			if (!origins.contains(oldOrigin) || newOrigin == null) {
+			if (!newLayer.getOrigins().contains(oldOrigin) || newOrigin == null) {
 				Simula.LOGGER.error("Removed unregistered origin \"{}\" from layer \"{}\" on player {}!", oldOrigin.id(), newLayer.id(), player.getName().getString());
 				mutable.setOrigin(newLayer, OriginHolder.EMPTY);
 			}
