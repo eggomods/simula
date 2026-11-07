@@ -1,13 +1,14 @@
 package io.github.eggohito.simula.layer;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.eggohito.kaya.context.Context;
 import io.github.eggohito.kaya.context.ContextValidatable;
 import io.github.eggohito.kaya.context.ContextValidator;
-import io.github.eggohito.kaya.util.CodecUtil;
-import io.github.eggohito.kaya.util.ComponentUtil;
-import io.github.eggohito.kaya.util.StreamCodecUtil;
+import io.github.eggohito.kaya.util.*;
 import io.github.eggohito.kaya.util.tag.TagLike;
 import io.github.eggohito.simula.Simula;
 import io.github.eggohito.simula.codec.SimulaStreamCodecs;
@@ -25,11 +26,12 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
 
-public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlacklist, Optional<ResourceLocation> defaultOrigin, Properties properties) implements ContextValidatable {
+public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlacklist, Optional<ResourceLocation> defaultOrigin, Properties properties) implements Comparable<Layer>, ContextValidatable {
 
 	public static final MapCodec<Layer> MAP_CODEC = Template.MAP_CODEC.xmap(
 		Template::toLayer,
@@ -45,8 +47,42 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 	);
 
 	@Override
+	public int compareTo(@NotNull Layer that) {
+		return Integer.compare(this.properties().order(), that.properties().order());
+	}
+
+	@Override
 	public void validate(ContextValidator validator) {
 		toTemplate().validate(validator);
+	}
+
+	public Multimap<Context, OriginHolder> getOriginsAsMap(Context context) {
+
+		Multimap<Context, OriginHolder> result = LinkedHashMultimap.create();
+		MiscUtil.iterateList(
+			origins(),
+			(index, entry) -> {
+
+				Context entryContext = context.forChild(".origins[" + index + "]");
+				List<OriginHolder> values = entry.getOrigins(entryContext);
+
+				result.putAll(entryContext, values);
+
+			}
+		);
+
+		return result;
+
+	}
+
+	public List<OriginHolder> getOrigins(Context context) {
+
+		List<OriginHolder> result = new ObjectArrayList<>();
+		this.getOriginsAsMap(context).forEach((entryContext, origin) -> result.add(origin));
+
+		result.sort(OriginHolder::compareTo);
+		return result;
+
 	}
 
 	public Template toTemplate() {
@@ -58,14 +94,19 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 		);
 	}
 
-	public record Properties(Display display, RandomOption randomOption, boolean autoChoose, boolean enabled, boolean hidden) {
+	public boolean allowsRandom() {
+		return this.properties().randomOption() != RandomOption.NONE;
+	}
+
+	public record Properties(Display display, RandomOption randomOption, boolean autoChoose, boolean enabled, boolean hidden, int order) {
 
 		public static final MapCodec<Properties> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
 			Display.CODEC.optionalFieldOf("display", Display.EMPTY).forGetter(Properties::display),
 			RandomOption.CODEC.optionalFieldOf("random_option", RandomOption.EXCLUDE_HIDDEN).forGetter(Properties::randomOption),
 			Codec.BOOL.optionalFieldOf("auto_choose", false).forGetter(Properties::autoChoose),
 			Codec.BOOL.optionalFieldOf("enabled", true).forGetter(Properties::enabled),
-			Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Properties::hidden)
+			Codec.BOOL.optionalFieldOf("hidden", false).forGetter(Properties::hidden),
+			Codec.INT.optionalFieldOf("order", 0).forGetter(Properties::order)
 		).apply(instance, Properties::new));
 
 		public static final StreamCodec<RegistryFriendlyByteBuf, Properties> STREAM_CODEC = StreamCodec.composite(
@@ -74,6 +115,7 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 			ByteBufCodecs.BOOL, Properties::autoChoose,
 			ByteBufCodecs.BOOL, Properties::enabled,
 			ByteBufCodecs.BOOL, Properties::hidden,
+			ByteBufCodecs.INT, Properties::order,
 			Properties::new
 		);
 
@@ -108,11 +150,34 @@ public record Layer(List<LayerEntry> origins, TagLike<OriginHolder> randomBlackl
 
 	}
 
-	public enum RandomOption {
+	public enum RandomOption implements TriPredicate<Context, Layer, OriginHolder> {
 
-		NONE,
-		EXCLUDE_HIDDEN,
-		INCLUDE_ALLOWED;
+		NONE {
+
+			@Override
+			public boolean test(Context context, Layer layer, OriginHolder origin) {
+				return false;
+			}
+
+		},
+
+		EXCLUDE_HIDDEN {
+
+			@Override
+			public boolean test(Context context, Layer layer, OriginHolder origin) {
+				return !origin.value().hidden(context);
+			}
+
+		},
+
+		INCLUDE_ALLOWED {
+
+			@Override
+			public boolean test(Context context, Layer layer, OriginHolder origin) {
+				return !layer.randomBlacklist().contains(origin);
+			}
+
+		};
 
 		public static final Codec<RandomOption> CODEC = CodecUtil.enumType(RandomOption.class);
 		public static final StreamCodec<ByteBuf, RandomOption> STREAM_CODEC = StreamCodecUtil.enumType(RandomOption.class);

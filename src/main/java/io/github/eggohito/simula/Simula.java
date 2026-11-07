@@ -4,6 +4,7 @@ import io.github.eggohito.simula.layer.manager.LayerManager;
 import io.github.eggohito.simula.network.SimulaServerboundPacketListener;
 import io.github.eggohito.simula.network.packet.SimulaPackets;
 import io.github.eggohito.simula.origin.manager.OriginManager;
+import io.github.eggohito.simula.registry.attachment.SimulaEntityAttachments;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -34,6 +35,8 @@ public class Simula implements ModInitializer {
 
 		SimulaPackets.registerAll();
 		SimulaServerboundPacketListener.init();
+
+		SimulaEntityAttachments.registerAll();
 
 		OriginManager.getInstance().init();
 		LayerManager.getInstance().init();

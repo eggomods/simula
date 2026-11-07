@@ -20,6 +20,7 @@ import io.github.eggohito.simula.event.SimulaDependencyManagers;
 import io.github.eggohito.simula.layer.Layer;
 import io.github.eggohito.simula.layer.LayerHolder;
 import io.github.eggohito.simula.network.packet.clientbound.ClientboundUpdateLayersPacket;
+import io.github.eggohito.simula.origin.entity.impl.MutableOriginsImpl;
 import io.github.eggohito.simula.origin.manager.OriginManager;
 import io.github.eggohito.simula.registry.SimulaRegistryKeys;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -58,6 +59,8 @@ public class ServerLayerManager extends AbstractContentManager<ResourceLocation,
 
 	@Override
 	public void init() {
+
+		MutableOriginsImpl.init();
 
 		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(ID, this::withOps);
 		SimulaDependencyManagers.LAYERS.register(ID, dependencies -> dependencies.add(OriginManager.ID));
@@ -150,7 +153,7 @@ public class ServerLayerManager extends AbstractContentManager<ResourceLocation,
 
 			ResourceLocation id = holder.id();
 
-			try (Reporter.Scoped reporter = new Reporter.Scoped("{\"" + id + "\"}", problems -> LOGGER.error("Found problems while validating layer \"{}\":\n{}", id, problems))) {
+			try (Reporter.Scoped reporter = new Reporter.Scoped(holder.getPath(), problems -> LOGGER.error("Found problems while validating layer \"{}\":\n{}", id, problems))) {
 
 				ContextValidator validator = new ContextValidator(KayaPowerTypes.DEFAULT_PARAMETERS, reporter, MiscUtil.getRegistries(resources));
 				holder.validate(validator);

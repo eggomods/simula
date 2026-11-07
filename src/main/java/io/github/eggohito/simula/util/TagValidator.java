@@ -10,6 +10,7 @@ import org.apache.commons.lang3.function.Consumers;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//  TODO: move to Kaya
 public record TagValidator<T>(TagEntry.Lookup<T> lookup) {
 
 	public DataResult<Unit> validateEntry(TagEntry entry) {

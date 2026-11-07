@@ -165,18 +165,22 @@ public class ServerOriginManager extends AbstractContentAndTagManager<ResourceLo
 
 		for (var holder : contents.values()) {
 
-			try (Reporter.Scoped reporter = new Reporter.Scoped("{\"" + holder.id() + "\"}", problems -> LOGGER.error("Found problems while validating origin \"{}\":\n{}", holder.id(), problems))) {
+			ResourceLocation id = holder.id();
+
+			try (Reporter.Scoped reporter = new Reporter.Scoped(holder.getPath(), problems -> LOGGER.error("Found problems while validating origin \"{}\":\n{}", id, problems))) {
 
 				ContextValidator validator = new ContextValidator(KayaPowerTypes.DEFAULT_PARAMETERS, reporter, MiscUtil.getRegistries(resources));
 				holder.validate(validator);
 
 				if (!reporter.hasProblems()) {
-					validated.put(holder.id(), holder);
+					validated.put(id, holder);
 				}
 
 			}
 
 		}
+
+		OriginHolder.specials().forEach(holder -> validated.put(holder.id(), holder));
 
 		this.contents = validated.build();
 		LOGGER.info("Finished validating {} origin(s). Origin manager contains {} origin(s)", prevSize, contents.size());
