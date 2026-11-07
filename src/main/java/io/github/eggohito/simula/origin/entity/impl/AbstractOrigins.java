@@ -1,11 +1,9 @@
 package io.github.eggohito.simula.origin.entity.impl;
 
-import io.github.eggohito.kaya.context.Context;
 import io.github.eggohito.simula.layer.LayerHolder;
 import io.github.eggohito.simula.layer.manager.LayerManager;
 import io.github.eggohito.simula.origin.OriginHolder;
 import io.github.eggohito.simula.origin.entity.Origins;
-import io.github.eggohito.simula.util.ContextHelper;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.entity.Entity;
 
@@ -45,10 +43,7 @@ public sealed abstract class AbstractOrigins implements Origins permits OriginsI
 
 		for (var layer : LayerManager.getInstance().getAllEnabled()) {
 
-			Context context = ContextHelper.forEntity(owner);
-			List<OriginHolder> origins = layer.getOrigins(context);
-
-			if (!origins.isEmpty() && !this.hasOrigin(layer)) {
+			if (!layer.getOrigins().isEmpty() && !this.hasOrigin(layer)) {
 				return false;
 			}
 
