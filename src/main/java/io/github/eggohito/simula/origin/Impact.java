@@ -21,9 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 public sealed interface Impact extends ContextValidatable {
 
-	Codec<Impact> CODEC = Codec.either(Definition.CODEC, Default.CODEC).xmap(Either::unwrap, Impact::wrap);
+	Codec<Impact> CODEC = Codec.lazyInitialized(() -> Codec.either(Definition.CODEC, Default.CODEC).xmap(Either::unwrap, Impact::wrap));
 
-	StreamCodec<RegistryFriendlyByteBuf, Impact> STREAM_CODEC = ByteBufCodecs.either(Definition.STREAM_CODEC, Default.STREAM_CODEC).map(Either::unwrap, Impact::wrap);
+	StreamCodec<RegistryFriendlyByteBuf, Impact> STREAM_CODEC = StreamCodecUtil.lazy(() -> ByteBufCodecs.either(Definition.STREAM_CODEC, Default.STREAM_CODEC).map(Either::unwrap, Impact::wrap));
 
 	ResourceLocation id();
 
