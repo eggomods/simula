@@ -51,35 +51,14 @@ public final class MutableOriginsImpl extends AbstractOrigins implements Mutable
 
 	@Override
 	public boolean setOrigin(LayerHolder layer, OriginHolder origin) {
-
-		OriginHolder oldOrigin = this.getOrigin(layer);
-
-		if (oldOrigin == origin) {
-			return false;
-		}
-
-		//  Revoke and grant the powers specified in the old and new origin respectively
-		this.mutatePowers(layer, (mutablePowers, resourceLocation) -> oldOrigin.value().powers().elements(), MutablePowers::revoke);
-		this.mutatePowers(layer, (mutablePowers, resourceLocation) -> origin.value().powers().elements(), MutablePowers::grant);
-
-		this.origins.put(layer, origin);
-		this.hadOriginsBefore = this.allLayersHaveOrigins();
-
-		//  TODO: trigger an advancement criterion trigger here?
-
-		return this.changed = true;
-
+		return !owner.level().isClientSide()
+			&& this.setOriginInternal(layer, origin);
 	}
 
 	@Override
 	public boolean removeLayer(LayerHolder layer) {
-
-		OriginHolder oldOrigin = this.getOrigin(layer);
-		this.origins.remove(layer);
-
-		return oldOrigin != OriginHolder.EMPTY
-			&& (this.changed = this.mutatePowers(layer, Powers::getAllFromSource, MutablePowers::revoke));
-
+		return !owner.level().isClientSide()
+			&& this.removeLayerInternal(layer);
 	}
 
 	@Override
@@ -180,6 +159,37 @@ public final class MutableOriginsImpl extends AbstractOrigins implements Mutable
 
 		this.mutablePowers.close();
 		this.changed = false;
+
+	}
+
+	private boolean setOriginInternal(LayerHolder layer, OriginHolder origin) {
+
+		OriginHolder oldOrigin = this.getOrigin(layer);
+
+		if (oldOrigin == origin) {
+			return false;
+		}
+
+		//  Revoke and grant the powers specified in the old and new origin respectively
+		this.mutatePowers(layer, (mutablePowers, resourceLocation) -> oldOrigin.value().powers().elements(), MutablePowers::revoke);
+		this.mutatePowers(layer, (mutablePowers, resourceLocation) -> origin.value().powers().elements(), MutablePowers::grant);
+
+		this.origins.put(layer, origin);
+		this.hadOriginsBefore = this.allLayersHaveOrigins();
+
+		//  TODO: trigger an advancement criterion trigger here?
+
+		return this.changed = true;
+
+	}
+
+	private boolean removeLayerInternal(LayerHolder layer) {
+
+		OriginHolder oldOrigin = this.getOrigin(layer);
+		this.origins.remove(layer);
+
+		return oldOrigin != OriginHolder.EMPTY
+			&& (this.changed = this.mutatePowers(layer, Powers::getAllFromSource, MutablePowers::revoke));
 
 	}
 

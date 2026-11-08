@@ -55,9 +55,7 @@ public sealed abstract class AbstractOrigins implements Origins permits OriginsI
 
 	@Override
 	public boolean hasOrigin(LayerHolder layer) {
-		OriginHolder origin = this.origins.get(layer);
-		return origin != null
-			&& origin != OriginHolder.EMPTY;
+		return this.getOrigin(layer) != OriginHolder.EMPTY;
 	}
 
 }
